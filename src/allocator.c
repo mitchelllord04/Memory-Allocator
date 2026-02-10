@@ -38,7 +38,7 @@ typedef struct __attribute__((aligned(16))) Block
 #define ALIGNMENT 16
 
 // Size of metadata for each memory block, rounded up to the nearest multiple of ALIGNMENT
-#define ALIGNED_METADATA_SIZE sizeof(Block)
+#define ALIGNED_METADATA_SIZE ((sizeof(Block) + (ALIGNMENT-1)) & ~(ALIGNMENT-1))
 
 // Minimum size of a memory block: metadata + at least one aligned data unit
 #define MIN_BLOCK_SIZE (ALIGNED_METADATA_SIZE + ALIGNMENT)
@@ -166,33 +166,9 @@ void mfree(void *ptr)
 
     // Set block status to free and coalesce.
     Block *metadata = (Block *)((char *)ptr - ALIGNED_METADATA_SIZE);
+    if (metadata->free) return;
     metadata->free = 1;
     metadata = coalesce(metadata);
-
-    // Shrink heap if possible.
-    if (metadata->next == NULL)
-    {
-        if (metadata == head)
-        {
-            sbrk(-(metadata->size + ALIGNED_METADATA_SIZE));
-            return;
-        }
-
-        // Update the previous block's next pointer to NULL before shrinking.
-        Block *curr = head;
-        while (curr != NULL)
-        {
-            if (curr->next == metadata)
-            {
-                curr->next = NULL;
-                break;
-            }
-
-            curr = curr->next;
-        }
-
-        sbrk(-(metadata->size + ALIGNED_METADATA_SIZE));
-    }
 }
 
 /*

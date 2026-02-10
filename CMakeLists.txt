@@ -12,4 +12,9 @@ add_executable(Malloc
         tests/test_allocator.c
         tests/unity.c
         tests/unity.h
-        tests/unity_internals.h)
+        tests/unity_internals.h
+        tests/test_allocator.c
+        tests/test_allocator.c
+        tests/test_alignment.c
+        tests/test_split.c
+        tests/test_coalesce.c)
